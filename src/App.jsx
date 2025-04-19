@@ -1,4 +1,3 @@
-// App.jsx (modularized with animation and skeleton loader support)
 import React, { useState, useEffect } from 'react';
 import NavBar from './pages/NavBar';
 import VulnerabilityCard from './pages/VulnerabilityCard';
@@ -7,6 +6,7 @@ import SkeletonBox from './pages/SkeletonBox';
 
 export default function App() {
   const [url, setUrl] = useState("");
+  const [scanMode, setScanMode] = useState("quick");
   const [loading, setLoading] = useState(false);
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [suggestions, setSuggestions] = useState("");
@@ -59,7 +59,7 @@ export default function App() {
       const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: targetUrl })
+        body: JSON.stringify({ url: targetUrl, scanMode })
       });
 
       const text = await res.text();
@@ -105,6 +105,17 @@ export default function App() {
     setHistory([]);
     localStorage.removeItem('scanHistory');
   };
+
+  const calculateRiskLevel = () => {
+    if (vulnerabilities.length === 0) return null;
+    const high = vulnerabilities.filter(v => v.recommendation?.toLowerCase().includes("high")).length;
+    const medium = vulnerabilities.filter(v => v.recommendation?.toLowerCase().includes("medium")).length;
+    if (high >= 2) return "High";
+    if (medium >= 2 || high === 1) return "Medium";
+    return "Low";
+  };
+
+  const riskLevel = calculateRiskLevel();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900">
@@ -158,6 +169,14 @@ export default function App() {
               onChange={(e) => setUrl(e.target.value)}
               required
             />
+            <select
+              value={scanMode}
+              onChange={(e) => setScanMode(e.target.value)}
+              className="px-4 py-2 border border-blue-300 rounded-xl bg-white shadow focus:outline-none focus:ring"
+            >
+              <option value="quick">Quick Scan</option>
+              <option value="full">Full Scan</option>
+            </select>
             <button
               type="submit"
               className="bg-blue-600 text-white px-6 py-2 rounded-xl shadow hover:bg-blue-700 transition duration-200"
@@ -168,6 +187,12 @@ export default function App() {
 
           {error && (
             <div className="mb-4 text-red-600 font-semibold text-center">{error}</div>
+          )}
+
+          {riskLevel && (
+            <div className={`text-sm font-semibold mb-4 px-4 py-2 rounded-xl inline-block ${riskLevel === 'High' ? 'bg-red-100 text-red-700' : riskLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+              🔥 Risk Level: {riskLevel}
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

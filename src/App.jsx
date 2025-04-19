@@ -16,7 +16,11 @@ export default function App() {
   }, []);
 
   const addToHistory = (url, data) => {
-    const updated = [{ url, data }, ...history.filter(entry => entry.url !== url)].slice(0, 10);
+    const timestamp = new Date().toISOString();
+    const updated = [
+      { url, data, timestamp },
+      ...history.filter(entry => entry.url !== url)
+    ].slice(0, 10);
     setHistory(updated);
     localStorage.setItem('scanHistory', JSON.stringify(updated));
   };
@@ -112,6 +116,11 @@ Respond in markdown format.
     localStorage.setItem('scanHistory', JSON.stringify(updated));
   };
 
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('scanHistory');
+  };
+
   const renderSeverityBadge = (text) => {
     if (text.toLowerCase().includes("high")) return <span className="text-red-600 font-bold text-xs ml-2">🔴 High</span>;
     if (text.toLowerCase().includes("medium")) return <span className="text-yellow-600 font-bold text-xs ml-2">🟡 Medium</span>;
@@ -133,7 +142,17 @@ Respond in markdown format.
         </div>
       ) : activePage === "history" ? (
         <div className="max-w-3xl mx-auto p-6">
-          <h2 className="text-2xl font-bold mb-4">Scan History</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Scan History</h2>
+            {history.length > 0 && (
+              <button
+                onClick={clearHistory}
+                className="text-sm text-red-600 hover:text-red-800"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             {history.length === 0 ? (
               <li className="text-gray-500">No scans yet.</li>
@@ -141,7 +160,7 @@ Respond in markdown format.
               history.map((entry, index) => (
                 <li
                   key={index}
-                  className="flex items-center justify-between gap-4"
+                  className="flex items-start justify-between gap-4"
                 >
                   <span
                     onClick={() => entry.data ? handleViewHistory(entry) : null}
@@ -149,6 +168,8 @@ Respond in markdown format.
                     title={entry.data ? 'Click to view report' : 'No scan data available'}
                   >
                     {entry.url}
+                    <br />
+                    <small className="text-gray-500">{new Date(entry.timestamp).toLocaleString()}</small>
                   </span>
                   <button
                     onClick={() => removeFromHistory(entry.url)}

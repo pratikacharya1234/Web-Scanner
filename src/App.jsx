@@ -53,7 +53,7 @@ Respond in markdown format.
     setVulnerabilities([]);
 
     try {
-      const res = await fetch("api/scan", {
+      const res = await fetch("/api/scan", {  // ✅ Fixed path for Vercel
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })

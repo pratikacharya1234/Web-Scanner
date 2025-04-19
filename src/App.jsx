@@ -53,7 +53,7 @@ Respond in markdown format.
     setVulnerabilities([]);
 
     try {
-      const res = await fetch("http://localhost:5000/api/scan", {
+      const res = await fetch("api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })

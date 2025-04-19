@@ -1,3 +1,4 @@
+// api/scan.js
 import scanner from 'web-vuln-scanner';
 
 export default async function handler(req, res) {
@@ -6,23 +7,22 @@ export default async function handler(req, res) {
   }
 
   const { url } = req.body;
-  if (!url) {
-    return res.status(400).json({ success: false, message: 'Missing URL' });
+  if (!url || !url.startsWith('http')) {
+    return res.status(400).json({ success: false, message: 'Invalid or missing URL' });
   }
 
   try {
     const results = await scanner.scan(url, {
-      scanModules: ['xss', 'headers', 'ssl'],
-      timeout: 30000,
-      verbose: true,
+      scanModules: ['headers', 'ssl'], // ✅ faster than 'xss'
+      timeout: 8000,                   // ✅ below Vercel's 10s limit
       depth: 1,
-      concurrency: 5,
-      disableCrawler: false,
+      concurrency: 3,
+      disableCrawler: true,           // ✅ no crawling = faster
       userAgent: 'CustomScanner/1.0',
       headers: { 'X-Test-Header': 'demo' }
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       vulnerabilities: results.vulnerabilities.map(v => ({
         name: v.name,
@@ -30,8 +30,12 @@ export default async function handler(req, res) {
         recommendation: v.recommendation || 'No recommendation'
       }))
     });
-  } catch (error) {
-    console.error('Scanner error:', error);
-    return res.status(500).json({ success: false, message: 'Scanner failed', error: error.message });
+  } catch (err) {
+    console.error('❌ Scan error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Scan failed due to timeout or error',
+      error: err.message
+    });
   }
 }

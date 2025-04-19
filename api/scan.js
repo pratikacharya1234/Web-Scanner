@@ -1,19 +1,14 @@
-// ✅ Updated Backend: Scan and send vulnerabilities to frontend (no browser opening, no HTML saving)
-
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import scanner from 'web-vuln-scanner';
 
-dotenv.config();
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Only POST requests allowed' });
+  }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-app.post('/api/scan', async (req, res) => {
   const { url } = req.body;
-  if (!url) return res.status(400).json({ success: false, message: 'Missing URL' });
+  if (!url) {
+    return res.status(400).json({ success: false, message: 'Missing URL' });
+  }
 
   try {
     const results = await scanner.scan(url, {
@@ -27,7 +22,7 @@ app.post('/api/scan', async (req, res) => {
       headers: { 'X-Test-Header': 'demo' }
     });
 
-    res.json({
+    return res.status(200).json({
       success: true,
       vulnerabilities: results.vulnerabilities.map(v => ({
         name: v.name,
@@ -37,8 +32,6 @@ app.post('/api/scan', async (req, res) => {
     });
   } catch (error) {
     console.error('Scanner error:', error);
-    res.status(500).json({ success: false, message: 'Scanner failed', error: error.message });
+    return res.status(500).json({ success: false, message: 'Scanner failed', error: error.message });
   }
-});
-
-app.listen(5000, () => console.log('✅ API server running at http://localhost:5000'));
+}

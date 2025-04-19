@@ -15,8 +15,8 @@ export default function App() {
     setHistory(stored);
   }, []);
 
-  const addToHistory = (url) => {
-    const updated = [...new Set([url, ...history])].slice(0, 10);
+  const addToHistory = (url, data) => {
+    const updated = [{ url, data }, ...history.filter(entry => entry.url !== url)].slice(0, 10);
     setHistory(updated);
     localStorage.setItem('scanHistory', JSON.stringify(updated));
   };
@@ -49,7 +49,6 @@ Respond in markdown format.
       });
 
       const data = await response.json();
-      console.log("Gemini response:", data);
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Gemini returned no suggestions.";
     } catch (err) {
       console.error("Gemini fetch error:", err);
@@ -57,8 +56,9 @@ Respond in markdown format.
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, manualUrl = null) => {
+    e?.preventDefault();
+    const targetUrl = manualUrl || url;
     setLoading(true);
     setError(null);
     setSuggestions("");
@@ -68,7 +68,7 @@ Respond in markdown format.
       const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url: targetUrl })
       });
 
       const text = await res.text();
@@ -80,10 +80,13 @@ Respond in markdown format.
       }
 
       if (data.success) {
-        addToHistory(url);
-        setVulnerabilities(data.vulnerabilities);
         const suggestion = await getFixSuggestions(data.vulnerabilities);
+        setVulnerabilities(data.vulnerabilities);
         setSuggestions(suggestion);
+        addToHistory(targetUrl, {
+          vulnerabilities: data.vulnerabilities,
+          suggestions: suggestion
+        });
       } else {
         setError(data.message || "Scan failed");
       }
@@ -93,6 +96,13 @@ Respond in markdown format.
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewHistory = (entry) => {
+    setUrl(entry.url);
+    setVulnerabilities(entry.data.vulnerabilities);
+    setSuggestions(entry.data.suggestions);
+    setActivePage("home");
   };
 
   const renderSeverityBadge = (text) => {
@@ -121,7 +131,15 @@ Respond in markdown format.
             {history.length === 0 ? (
               <li className="text-gray-500">No scans yet.</li>
             ) : (
-              history.map((url, index) => <li key={index}>{url}</li>)
+              history.map((entry, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleViewHistory(entry)}
+                  className="cursor-pointer hover:underline text-blue-600"
+                >
+                  {entry.url}
+                </li>
+              ))
             )}
           </ul>
         </div>

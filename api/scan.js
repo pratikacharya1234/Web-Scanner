@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   try {
     const results = await scanner.scan(url, {
       scanModules: ['headers', 'ssl'], // ✅ faster than 'xss'
-      timeout: 8000,                   // ✅ below Vercel's 10s limit
+      timeout: 3000,                   // ✅ below Vercel's 10s limit
       depth: 1,
       concurrency: 3,
       disableCrawler: true,           // ✅ no crawling = faster

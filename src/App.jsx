@@ -1,3 +1,4 @@
+// App.jsx (with Tailwind utility class refinements)
 import React, { useState, useEffect } from 'react';
 import NavBar from './pages/NavBar';
 
@@ -26,30 +27,13 @@ export default function App() {
   };
 
   const getFixSuggestions = async (vulns) => {
-    const prompt = `
-You are a cybersecurity expert.
-
-Below is a list of vulnerabilities detected in a website scan:
-
-${vulns.map((v, i) => `${i + 1}. ${v.name}: ${v.description || 'No description'} — Recommendation: ${v.recommendation || 'None'}`).join("\n")}
-
-For each:
-- Explain what the vulnerability is
-- Suggest how to fix it (step-by-step)
-- Provide example code or headers if applicable
-
-Respond in markdown format.
-    `;
+    const prompt = `You are a cybersecurity expert. Below is a list of vulnerabilities detected in a website scan:\n${vulns.map((v, i) => `${i + 1}. ${v.name}: ${v.description || 'No description'} — Recommendation: ${v.recommendation || 'None'}`).join("\n")}\nFor each: Explain what the vulnerability is, suggest how to fix it (step-by-step), and provide example code or headers if applicable.`;
 
     try {
       const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDax07nxeU8DkzuZQON_xDBtFfwiQkM94U", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
 
       const data = await response.json();
@@ -77,9 +61,7 @@ Respond in markdown format.
 
       const text = await res.text();
       let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
+      try { data = JSON.parse(text); } catch {
         throw new Error("Non-JSON response: " + text);
       }
 
@@ -122,22 +104,21 @@ Respond in markdown format.
   };
 
   const renderSeverityBadge = (text) => {
-    if (text.toLowerCase().includes("high")) return <span className="text-red-600 font-bold text-xs ml-2">🔴 High</span>;
-    if (text.toLowerCase().includes("medium")) return <span className="text-yellow-600 font-bold text-xs ml-2">🟡 Medium</span>;
-    return <span className="text-green-600 font-bold text-xs ml-2">🟢 Info</span>;
+    const severity = text.toLowerCase();
+    if (severity.includes("high")) return <span className="bg-red-100 text-red-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🔴 High</span>;
+    if (severity.includes("medium")) return <span className="bg-yellow-100 text-yellow-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🟡 Medium</span>;
+    return <span className="bg-green-100 text-green-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🟢 Info</span>;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900">
       <NavBar activePage={activePage} setActivePage={setActivePage} />
 
       {activePage === "about" ? (
         <div className="max-w-3xl mx-auto p-6">
           <h2 className="text-2xl font-bold mb-4">About AI VulnScanner</h2>
           <p className="text-gray-700 leading-relaxed">
-            AI VulnScanner is a real-time website vulnerability scanner that not only detects security issues on a website using a custom scanning engine,
-            but also leverages Google's Gemini AI to explain and suggest practical remediations for each vulnerability.
-            Built for students, developers, and ethical hackers, it's designed to help you secure your websites fast.
+            AI VulnScanner is a real-time vulnerability scanner that detects website issues using a scanning engine and suggests AI-powered remediations using Gemini.
           </p>
         </div>
       ) : activePage === "history" ? (
@@ -145,39 +126,26 @@ Respond in markdown format.
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Scan History</h2>
             {history.length > 0 && (
-              <button
-                onClick={clearHistory}
-                className="text-sm text-red-600 hover:text-red-800"
-              >
-                Clear All
-              </button>
+              <button onClick={clearHistory} className="text-sm text-red-600 hover:text-red-800">Clear All</button>
             )}
           </div>
-          <ul className="list-disc list-inside text-gray-700 space-y-2">
+          <ul className="list-disc list-inside space-y-2">
             {history.length === 0 ? (
               <li className="text-gray-500">No scans yet.</li>
             ) : (
               history.map((entry, index) => (
-                <li
-                  key={index}
-                  className="flex items-start justify-between gap-4"
-                >
+                <li key={index} className="flex items-start justify-between gap-4">
                   <span
-                    onClick={() => entry.data ? handleViewHistory(entry) : null}
+                    onClick={() => entry.data && handleViewHistory(entry)}
                     className={`flex-1 cursor-pointer ${entry.data ? 'text-blue-600 hover:underline' : 'text-gray-400 cursor-not-allowed'}`}
-                    title={entry.data ? 'Click to view report' : 'No scan data available'}
                   >
-                    {entry.url}
-                    <br />
+                    {entry.url}<br />
                     <small className="text-gray-500">{new Date(entry.timestamp).toLocaleString()}</small>
                   </span>
                   <button
                     onClick={() => removeFromHistory(entry.url)}
                     className="text-red-500 hover:text-red-700 text-xs"
-                    title="Remove from history"
-                  >
-                    ✕
-                  </button>
+                  >✕</button>
                 </li>
               ))
             )}
@@ -189,14 +157,14 @@ Respond in markdown format.
             <input
               type="text"
               placeholder="Enter website URL (e.g., https://example.com)"
-              className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring focus:ring-blue-200"
+              className="w-full sm:flex-1 px-4 py-2 border border-blue-300 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-blue-200"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition duration-200"
+              className="bg-blue-600 text-white px-6 py-2 rounded-xl shadow hover:bg-blue-700 transition duration-200"
             >
               {loading ? "Scanning..." : "Scan"}
             </button>
@@ -208,9 +176,9 @@ Respond in markdown format.
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {vulnerabilities.length > 0 && (
-              <div className="bg-white border border-yellow-300 p-5 rounded-xl shadow-sm">
+              <div className="bg-white border border-yellow-200 p-5 rounded-xl shadow-sm">
                 <h2 className="text-lg font-semibold text-yellow-800 mb-3">🛡️ Detected Vulnerabilities</h2>
-                <ul className="list-disc list-inside text-sm text-gray-700 space-y-2">
+                <ul className="list-disc list-inside text-sm space-y-2 text-gray-700">
                   {vulnerabilities.map((v, i) => (
                     <li key={i} className="flex flex-wrap">
                       <span className="font-medium text-gray-900">{v.name}</span>: {v.recommendation || 'No recommendation'}
@@ -220,7 +188,6 @@ Respond in markdown format.
                 </ul>
               </div>
             )}
-
             {suggestions && (
               <div className="bg-white border border-green-300 p-5 rounded-xl shadow-sm overflow-auto">
                 <h2 className="text-lg font-semibold text-green-800 mb-3">✅ Gemini Recommendations</h2>

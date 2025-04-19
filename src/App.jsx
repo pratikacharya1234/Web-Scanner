@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavBar from './pages/NavBar';
 
 export default function App() {
@@ -8,6 +8,18 @@ export default function App() {
   const [suggestions, setSuggestions] = useState("");
   const [error, setError] = useState(null);
   const [activePage, setActivePage] = useState("home");
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('scanHistory')) || [];
+    setHistory(stored);
+  }, []);
+
+  const addToHistory = (url) => {
+    const updated = [...new Set([url, ...history])].slice(0, 10);
+    setHistory(updated);
+    localStorage.setItem('scanHistory', JSON.stringify(updated));
+  };
 
   const getFixSuggestions = async (vulns) => {
     const prompt = `
@@ -68,6 +80,7 @@ Respond in markdown format.
       }
 
       if (data.success) {
+        addToHistory(url);
         setVulnerabilities(data.vulnerabilities);
         const suggestion = await getFixSuggestions(data.vulnerabilities);
         setSuggestions(suggestion);
@@ -100,6 +113,17 @@ Respond in markdown format.
             but also leverages Google's Gemini AI to explain and suggest practical remediations for each vulnerability.
             Built for students, developers, and ethical hackers, it's designed to help you secure your websites fast.
           </p>
+        </div>
+      ) : activePage === "history" ? (
+        <div className="max-w-3xl mx-auto p-6">
+          <h2 className="text-2xl font-bold mb-4">Scan History</h2>
+          <ul className="list-disc list-inside text-gray-700 space-y-1">
+            {history.length === 0 ? (
+              <li className="text-gray-500">No scans yet.</li>
+            ) : (
+              history.map((url, index) => <li key={index}>{url}</li>)
+            )}
+          </ul>
         </div>
       ) : (
         <div className="p-4 md:p-6 max-w-6xl mx-auto">

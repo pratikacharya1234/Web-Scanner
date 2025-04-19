@@ -1,6 +1,9 @@
-// App.jsx (with Tailwind utility class refinements)
+// App.jsx (modularized with animation and skeleton loader support)
 import React, { useState, useEffect } from 'react';
 import NavBar from './pages/NavBar';
+import VulnerabilityCard from './pages/VulnerabilityCard';
+import SuggestionBox from './pages/SuggestionBox';
+import SkeletonBox from './pages/SkeletonBox';
 
 export default function App() {
   const [url, setUrl] = useState("");
@@ -103,13 +106,6 @@ export default function App() {
     localStorage.removeItem('scanHistory');
   };
 
-  const renderSeverityBadge = (text) => {
-    const severity = text.toLowerCase();
-    if (severity.includes("high")) return <span className="bg-red-100 text-red-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🔴 High</span>;
-    if (severity.includes("medium")) return <span className="bg-yellow-100 text-yellow-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🟡 Medium</span>;
-    return <span className="bg-green-100 text-green-700 font-semibold text-xs ml-2 px-2 py-0.5 rounded-full">🟢 Info</span>;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900">
       <NavBar activePage={activePage} setActivePage={setActivePage} />
@@ -175,24 +171,17 @@ export default function App() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {vulnerabilities.length > 0 && (
-              <div className="bg-white border border-yellow-200 p-5 rounded-xl shadow-sm">
-                <h2 className="text-lg font-semibold text-yellow-800 mb-3">🛡️ Detected Vulnerabilities</h2>
-                <ul className="list-disc list-inside text-sm space-y-2 text-gray-700">
-                  {vulnerabilities.map((v, i) => (
-                    <li key={i} className="flex flex-wrap">
-                      <span className="font-medium text-gray-900">{v.name}</span>: {v.recommendation || 'No recommendation'}
-                      {renderSeverityBadge(v.recommendation || '')}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {suggestions && (
-              <div className="bg-white border border-green-300 p-5 rounded-xl shadow-sm overflow-auto">
-                <h2 className="text-lg font-semibold text-green-800 mb-3">✅ Gemini Recommendations</h2>
-                <div className="text-sm text-gray-800 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: suggestions.replace(/\n/g, '<br/>') }} />
-              </div>
+            {loading ? (
+              <SkeletonBox />
+            ) : (
+              <>
+                {vulnerabilities.length > 0 && (
+                  <VulnerabilityCard data={vulnerabilities} />
+                )}
+                {suggestions && (
+                  <SuggestionBox content={suggestions} />
+                )}
+              </>
             )}
           </div>
         </div>

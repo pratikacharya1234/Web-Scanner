@@ -99,10 +99,17 @@ Respond in markdown format.
   };
 
   const handleViewHistory = (entry) => {
+    if (!entry.data) return;
     setUrl(entry.url);
-    setVulnerabilities(entry.data.vulnerabilities);
-    setSuggestions(entry.data.suggestions);
+    setVulnerabilities(entry.data.vulnerabilities || []);
+    setSuggestions(entry.data.suggestions || "");
     setActivePage("home");
+  };
+
+  const removeFromHistory = (urlToRemove) => {
+    const updated = history.filter(entry => entry.url !== urlToRemove);
+    setHistory(updated);
+    localStorage.setItem('scanHistory', JSON.stringify(updated));
   };
 
   const renderSeverityBadge = (text) => {
@@ -127,17 +134,29 @@ Respond in markdown format.
       ) : activePage === "history" ? (
         <div className="max-w-3xl mx-auto p-6">
           <h2 className="text-2xl font-bold mb-4">Scan History</h2>
-          <ul className="list-disc list-inside text-gray-700 space-y-1">
+          <ul className="list-disc list-inside text-gray-700 space-y-2">
             {history.length === 0 ? (
               <li className="text-gray-500">No scans yet.</li>
             ) : (
               history.map((entry, index) => (
                 <li
                   key={index}
-                  onClick={() => handleViewHistory(entry)}
-                  className="cursor-pointer hover:underline text-blue-600"
+                  className="flex items-center justify-between gap-4"
                 >
-                  {entry.url}
+                  <span
+                    onClick={() => entry.data ? handleViewHistory(entry) : null}
+                    className={`flex-1 cursor-pointer ${entry.data ? 'text-blue-600 hover:underline' : 'text-gray-400 cursor-not-allowed'}`}
+                    title={entry.data ? 'Click to view report' : 'No scan data available'}
+                  >
+                    {entry.url}
+                  </span>
+                  <button
+                    onClick={() => removeFromHistory(entry.url)}
+                    className="text-red-500 hover:text-red-700 text-xs"
+                    title="Remove from history"
+                  >
+                    ✕
+                  </button>
                 </li>
               ))
             )}

@@ -3,6 +3,8 @@ import NavBar from './pages/NavBar';
 import VulnerabilityCard from './pages/VulnerabilityCard';
 import SuggestionBox from './pages/SuggestionBox';
 import SkeletonBox from './pages/SkeletonBox';
+import VulnerabilityModal from './pages/VulnerabilityModal';
+
 
 export default function App() {
   const [url, setUrl] = useState("");
@@ -13,6 +15,8 @@ export default function App() {
   const [error, setError] = useState(null);
   const [activePage, setActivePage] = useState("home");
   const [history, setHistory] = useState([]);
+  const [selectedVuln, setSelectedVuln] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('scanHistory')) || [];
@@ -121,6 +125,12 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 text-gray-900">
       <NavBar activePage={activePage} setActivePage={setActivePage} />
 
+      <VulnerabilityModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        vulnerability={selectedVuln}
+      />
+
       {activePage === "about" ? (
         <div className="max-w-3xl mx-auto p-6">
           <h2 className="text-2xl font-bold mb-4">About AI VulnScanner</h2>
@@ -201,7 +211,13 @@ export default function App() {
             ) : (
               <>
                 {vulnerabilities.length > 0 && (
-                  <VulnerabilityCard data={vulnerabilities} />
+                  <VulnerabilityCard
+                    data={vulnerabilities}
+                    onClickVuln={(v) => {
+                      setSelectedVuln(v);
+                      setShowModal(true);
+                    }}
+                  />
                 )}
                 {suggestions && (
                   <SuggestionBox content={suggestions} />

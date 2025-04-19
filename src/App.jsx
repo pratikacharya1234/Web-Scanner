@@ -53,13 +53,20 @@ Respond in markdown format.
     setVulnerabilities([]);
 
     try {
-      const res = await fetch("/api/scan", {  // ✅ Fixed path for Vercel
+      const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Non-JSON response: " + text);
+      }
+
       if (data.success) {
         setVulnerabilities(data.vulnerabilities);
         const suggestion = await getFixSuggestions(data.vulnerabilities);
@@ -68,8 +75,8 @@ Respond in markdown format.
         setError(data.message || "Scan failed");
       }
     } catch (err) {
-      console.error(err);
-      setError("Server error");
+      console.error("Scan error:", err.message);
+      setError(err.message || "Server error");
     } finally {
       setLoading(false);
     }

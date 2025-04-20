@@ -30,7 +30,7 @@ AI VulnScanner is a real-time website vulnerability scanner that detects securit
 
 ## 🚀 Live Demo
 
-🔗 [https://your-vercel-link.vercel.app](https://your-vercel-link.vercel.app)
+🔗 [Live](https://scannervuln.vercel.app/)
 
 ---
 

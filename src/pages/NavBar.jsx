@@ -1,4 +1,3 @@
-// pages/NavBar.jsx
 import React from 'react';
 
 export default function NavBar({ activePage, setActivePage }) {

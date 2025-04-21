@@ -14,7 +14,7 @@ export default function FixPlayground({ vulnerability }) {
     const prompt = `You are a web security expert. A user provided the following fix for a vulnerability.\n\nVulnerability: ${vulnerability.name}\n\nDescription: ${vulnerability.description}\n\nFix Attempt:\n${code}\n\nIs this fix effective? Respond with:\n✅ Yes - if it works, or ❌ No - if it does not. Add one short reason.`;
 
     try {
-      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=process.env.GEMINI_API_KEY", {
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=process.env.API_KEY", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
